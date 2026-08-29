@@ -93,11 +93,6 @@ export default function App() {
       updateData.completionTimeFormatted = completionTimeFormatted;
     }
     try {
-      await fetch(`/api/teams/${teamInfo.id}/progress`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: currentScore, level, isFinished, tabSwitches: tabSwitchCount, completionTimeFormatted })
-      });
       await updateTeamProgressInFirebase(teamInfo.id, updateData);
     } catch (e) {
       console.error(e);

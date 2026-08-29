@@ -12,25 +12,7 @@ export function Host({ onLogout }: { onLogout: () => void }) {
   const [teams, setTeams] = useState<TeamData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchTeams = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/teams');
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) {
-          setTeams(data);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    setIsLoading(false);
-  };
-
   useEffect(() => {
-    fetchTeams();
-
     // Subscribe to Firebase live updates for instant real-time telemetry on the Host page
     const unsubscribe = subscribeToTeams((firebaseTeams) => {
       if (firebaseTeams) {
@@ -46,17 +28,14 @@ export function Host({ onLogout }: { onLogout: () => void }) {
       }
     });
 
-    const interval = setInterval(fetchTeams, 5000); // Polling backup
     return () => {
       unsubscribe();
-      clearInterval(interval);
     };
   }, []);
 
   const clearAll = async () => {
     if (confirm("WARNING: This will delete all teams and scores from local state and Firebase. Proceed?")) {
       try {
-        await fetch('/api/teams', { method: 'DELETE' });
         await clearAllTeamsFromFirebase();
         setTeams([]);
       } catch (e) {
@@ -67,13 +46,7 @@ export function Host({ onLogout }: { onLogout: () => void }) {
 
   const updateTeam = async (id: string, updates: Partial<TeamData>) => {
     try {
-      await fetch(`/api/teams/${id}/override`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
       await updateTeamProgressInFirebase(id, updates);
-      fetchTeams();
     } catch (e) {
       console.error(e);
     }
@@ -82,9 +55,7 @@ export function Host({ onLogout }: { onLogout: () => void }) {
   const deleteTeam = async (id: string) => {
     if (confirm("Kick this team?")) {
       try {
-        await fetch(`/api/teams/${id}`, { method: 'DELETE' });
         await deleteTeamFromFirebase(id);
-        fetchTeams();
       } catch (e) {
         console.error(e);
       }
@@ -108,9 +79,9 @@ export function Host({ onLogout }: { onLogout: () => void }) {
           </div>
           
           <div className="flex gap-3">
-            <button onClick={fetchTeams} className="btn-secondary px-4 py-2 rounded-lg flex items-center gap-2">
+            <button onClick={() => setIsLoading(true)} className="btn-secondary px-4 py-2 rounded-lg flex items-center gap-2">
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
-              <span className="text-xs">REFRESH</span>
+              <span className="text-xs">SYNCING</span>
             </button>
             <button onClick={clearAll} className="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 text-rose-400 px-4 py-2 rounded-lg text-xs font-display font-black tracking-widest uppercase transition-colors flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />

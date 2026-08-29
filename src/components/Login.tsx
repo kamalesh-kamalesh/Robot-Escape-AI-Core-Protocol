@@ -39,27 +39,27 @@ export function Login({ onLogin, onHostAccess }: LoginProps) {
       return;
     }
 
-    if (!teamName || !member1 || !member2) {
-      setError('All fields are required');
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/teams', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: teamName, member1, member2 })
-      });
+      // Local client-side generation (bypassing backend to support static hosts)
+      const finalTeamName = teamName.trim() || `Squad-${Math.floor(Math.random() * 10000)}`;
+      const finalMember1 = member1.trim() || 'Operative 1';
+      const finalMember2 = member2.trim() || 'Operative 2';
+      const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+
+      const team = {
+        id,
+        name: finalTeamName,
+        member1: finalMember1,
+        member2: finalMember2,
+        score: 0,
+        level: 1,
+        createdAt: Date.now()
+      };
       
-      if (!response.ok) {
-        throw new Error('Failed to register team');
-      }
-      
-      const team = await response.json();
-      await saveTeamToFirebase(team);
+      await saveTeamToFirebase(team as any);
       onLogin(team);
     } catch (err: any) {
       setError(err.message || 'Connection error. Try again.');
