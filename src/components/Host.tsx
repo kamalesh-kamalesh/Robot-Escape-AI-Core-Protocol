@@ -138,6 +138,7 @@ export function Host({ onLogout }: { onLogout: () => void }) {
                   <th className="p-4 border-b border-white/10">TEAM DESIGNATION</th>
                   <th className="p-4 border-b border-white/10">OPERATIVES</th>
                   <th className="p-4 border-b border-white/10 text-center">SECTOR</th>
+                  <th className="p-4 border-b border-white/10 text-center">TIME OF COMPLETION</th>
                   <th className="p-4 border-b border-white/10 text-right">SCORE (PTS)</th>
                   <th className="p-4 border-b border-white/10 text-right">STATUS</th>
                   <th className="p-4 border-b border-white/10 text-right">ACTIONS</th>
@@ -146,7 +147,7 @@ export function Host({ onLogout }: { onLogout: () => void }) {
               <tbody className="text-sm font-sans divide-y divide-white/5">
                 {teams.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-white/40 font-mono text-xs">NO ACTIVE TEAMS IN THE MAINFRAME</td>
+                    <td colSpan={8} className="p-8 text-center text-white/40 font-mono text-xs">NO ACTIVE TEAMS IN THE MAINFRAME</td>
                   </tr>
                 ) : (
                   teams.map((team, idx) => (
@@ -169,7 +170,14 @@ export function Host({ onLogout }: { onLogout: () => void }) {
                         )}
                       </td>
                       <td className="p-4 font-display font-bold tracking-wider text-white">
-                        {team.name}
+                        <div className="flex flex-col gap-1">
+                          <span>{team.name}</span>
+                          {team.tabSwitches && team.tabSwitches > 0 ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-rose-400 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded w-fit">
+                              ⚠️ {team.tabSwitches} TAB SWITCH{team.tabSwitches > 1 ? 'ES' : ''}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
@@ -187,6 +195,20 @@ export function Host({ onLogout }: { onLogout: () => void }) {
                         <div className="inline-flex items-center justify-center px-2 py-1 bg-cyan-950/40 border border-cyan-400/30 rounded text-cyan-400 font-mono text-xs">
                           {team.level >= 8 ? 'VICTORY' : team.level >= 7 ? 'FINAL' : team.level}
                         </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        {team.completedAt ? (
+                          <div className="flex flex-col items-center">
+                            <span className="font-display font-black text-emerald-400 text-sm tracking-wider">
+                              {team.completionTimeFormatted || 'COMPLETED'}
+                            </span>
+                            <span className="text-[9px] font-mono text-slate-400">
+                              {new Date(team.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-mono text-slate-600">--:--</span>
+                        )}
                       </td>
                       <td className="p-4 text-right font-mono font-bold text-lg text-emerald-400">
                         {team.score.toLocaleString()}

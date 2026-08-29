@@ -37,6 +37,8 @@ export interface TeamData {
   score: number;
   level: number;
   completedAt?: number;
+  completionTimeFormatted?: string;
+  tabSwitches?: number;
   createdAt: number;
 }
 

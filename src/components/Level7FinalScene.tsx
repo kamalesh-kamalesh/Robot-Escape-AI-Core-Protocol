@@ -12,15 +12,28 @@ interface Level7Props {
   score: number;
   timeRemainingSeconds: number; // to calculate speed bonus
   accuracy: number; // accumulated accuracy percentage
+  tabSwitchCount?: number;
   onResetGame: () => void;
 }
 
-export default function Level7FinalScene({ score, timeRemainingSeconds, accuracy, onResetGame }: Level7Props) {
+export default function Level7FinalScene({ score, timeRemainingSeconds, accuracy, tabSwitchCount = 0, onResetGame }: Level7Props) {
   const [teamName, setTeamName] = useState<string>("");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [overrideInput, setOverrideInput] = useState<string>("");
   const [isCoreOverridden, setIsCoreOverridden] = useState<boolean>(false);
+
+  // Calculate completion duration & timestamp
+  const timeElapsedSeconds = Math.max(0, 2400 - timeRemainingSeconds);
+  const elapsedMins = Math.floor(timeElapsedSeconds / 60);
+  const elapsedSecs = timeElapsedSeconds % 60;
+  const formattedDuration = `${elapsedMins.toString().padStart(2, '0')}m ${elapsedSecs.toString().padStart(2, '0')}s`;
+  
+  const [completionTimestamp] = useState<string>(() => {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) + 
+           ' • ' + now.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' });
+  });
 
   // Calculate speed bonus: +2 points per remaining second
   const speedBonus = Math.max(0, timeRemainingSeconds * 2);
@@ -158,6 +171,31 @@ export default function Level7FinalScene({ score, timeRemainingSeconds, accuracy
             <p className="text-[11px] text-slate-300 font-sans font-medium" id="victory-banner-desc">
               Laboratory security cycle has been terminated. Cognitive parameters locked and safe. Escape pods armed!
             </p>
+          </div>
+
+          {/* Dedicated High-Impact Completion Time Box */}
+          <div className="bg-emerald-950/30 border-2 border-emerald-400/40 rounded-2xl p-6 text-center shadow-[0_0_35px_rgba(52,211,153,0.2)] relative overflow-hidden flex flex-col items-center justify-center gap-2" id="completion-time-highlight-card">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex items-center gap-2 text-emerald-400 font-display font-black text-xs uppercase tracking-[0.25em]">
+              <Calendar className="w-4 h-4 text-emerald-400 animate-pulse" />
+              <span>OFFICIAL TIME OF COMPLETION</span>
+            </div>
+            
+            {/* Increased Font Size & Styled Typography */}
+            <div className="text-4xl sm:text-5xl md:text-6xl font-display font-black tracking-wider text-emerald-300 drop-shadow-[0_0_20px_rgba(52,211,153,0.6)] my-1">
+              {formattedDuration}
+            </div>
+
+            <div className="text-xs md:text-sm font-mono font-bold text-emerald-400/90 tracking-widest bg-emerald-950/60 border border-emerald-400/30 px-4 py-1.5 rounded-lg shadow-inner">
+              TIMESTAMP: {completionTimestamp}
+            </div>
+
+            {tabSwitchCount > 0 && (
+              <div className="mt-2 flex items-center gap-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 px-4 py-2 rounded-xl text-xs sm:text-sm font-display font-bold uppercase tracking-wider animate-pulse">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>SECURITY WARNING: {tabSwitchCount} TAB SWITCH(ES) LOGGED DURING SESSION</span>
+              </div>
+            )}
           </div>
 
           {/* Metric Stats bento row */}

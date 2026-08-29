@@ -50,17 +50,53 @@ export default function App() {
   const [totalAttempts, setTotalAttempts] = useState<number>(0);
   const [successCount, setSuccessCount] = useState<number>(0);
 
+  // Tab switching detection & security warning states
+  const [tabSwitchCount, setTabSwitchCount] = useState<number>(0);
+  const [showTabWarning, setShowTabWarning] = useState<boolean>(false);
+
+  // Visibility change & tab switch listener
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setTabSwitchCount((prev) => prev + 1);
+        setShowTabWarning(true);
+        audio.playAlarm();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const syncProgress = async (currentScore: number, level: number, isFinished: boolean = false) => {
     if (!teamInfo) return;
-    const updateData: { score: number; level: number; completedAt?: number } = { score: currentScore, level };
+    const timeElapsedSeconds = Math.max(0, 2400 - timeRemaining);
+    const mins = Math.floor(timeElapsedSeconds / 60);
+    const secs = timeElapsedSeconds % 60;
+    const completionTimeFormatted = `${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+
+    const updateData: { 
+      score: number; 
+      level: number; 
+      completedAt?: number; 
+      completionTimeFormatted?: string;
+      tabSwitches?: number;
+    } = { 
+      score: currentScore, 
+      level,
+      tabSwitches: tabSwitchCount 
+    };
     if (isFinished) {
       updateData.completedAt = Date.now();
+      updateData.completionTimeFormatted = completionTimeFormatted;
     }
     try {
       await fetch(`/api/teams/${teamInfo.id}/progress`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: currentScore, level, isFinished })
+        body: JSON.stringify({ score: currentScore, level, isFinished, tabSwitches: tabSwitchCount, completionTimeFormatted })
       });
       await updateTeamProgressInFirebase(teamInfo.id, updateData);
     } catch (e) {
@@ -436,6 +472,7 @@ export default function App() {
                     lives={lives}
                     energy={energy}
                     objective={objectives[currentLevel]}
+                    tabSwitchCount={tabSwitchCount}
                   />
 
                   {/* Active Sector Workspace Component */}
@@ -463,6 +500,7 @@ export default function App() {
                         score={score}
                         timeRemainingSeconds={timeRemaining}
                         accuracy={computedAccuracy}
+                        tabSwitchCount={tabSwitchCount}
                         onResetGame={handleResetGame}
                       />
                     )}
@@ -544,6 +582,7 @@ export default function App() {
                     score={score}
                     timeRemainingSeconds={timeRemaining}
                     accuracy={computedAccuracy}
+                    tabSwitchCount={tabSwitchCount}
                     onResetGame={handleResetGame}
                   />
                 </div>
@@ -553,6 +592,44 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Interactive Tab Switch Warning Alert Modal */}
+      {showTabWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 animate-fadeIn">
+          <div className="max-w-xl w-full bg-slate-900 border-2 border-rose-500 rounded-2xl p-6 md:p-8 text-center space-y-6 shadow-[0_0_60px_rgba(244,63,94,0.4)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 animate-pulse" />
+            
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 border-2 border-rose-400 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(244,63,94,0.5)] animate-bounce">
+              <ShieldAlert className="w-9 h-9 text-rose-400" />
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-sm font-mono text-rose-400 font-bold uppercase tracking-[0.2em] block">
+                ⚠️ MAINFRAME SECURITY NOTICE
+              </span>
+              
+              {/* Increased Font Size & Styled Typography */}
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-rose-300 uppercase tracking-wider drop-shadow-[0_0_15px_rgba(244,63,94,0.7)] leading-tight">
+                TAB SWITCHING DETECTED!
+              </h2>
+              
+              <p className="text-base md:text-lg font-mono font-bold text-amber-200 bg-black/50 p-4 rounded-xl border border-amber-500/30 leading-relaxed max-w-lg mx-auto">
+                A.R.I.A. monitoring system logged an unauthorized browser defocus / tab switch event.
+                <span className="block mt-2 text-rose-400 font-black text-xl">
+                  TOTAL TAB SWITCHES LOGGED: {tabSwitchCount}
+                </span>
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowTabWarning(false)}
+              className="w-full py-4 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-display font-black text-sm md:text-base uppercase tracking-widest rounded-xl transition shadow-[0_0_25px_rgba(244,63,94,0.4)] cursor-pointer"
+            >
+              ACKNOWLEDGE WARNING & RESUME PROTOCOL
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

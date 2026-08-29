@@ -1,21 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Exo+2:wght@400;600;700;800&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@500;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Exo 2", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Orbitron", sans-serif;
-  --font-accent: "Rajdhani", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Exo 2", "Chakra Petch", system-ui, sans-serif;
+  --font-display: "Orbitron", "Chakra Petch", sans-serif;
+  --font-accent: "Chakra Petch", sans-serif;
+  --font-mono: "Share Tech Mono", "JetBrains Mono", monospace;
 }
 
 /* Base resets to match dark background perfectly on load with deep purple/slate radial gradient */
 html, body, #root {
   background: radial-gradient(circle at 50% 0%, #2e0854 0%, #080313 100%) !important;
-  color: #f1f5f9;
+  color: #f8fafc;
   min-height: 100vh;
+  font-size: 17px;
+  line-height: 1.6;
+  font-family: var(--font-sans);
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Custom background patterns for dark neon cyber grids */

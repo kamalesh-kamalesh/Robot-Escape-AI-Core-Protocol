@@ -13,12 +13,27 @@ interface HUDProps {
   lives?: number;
   energy: number;
   objective: string;
+  tabSwitchCount?: number;
 }
 
-export default function HUD({ currentLevel, timeString, score, energy, objective }: HUDProps) {
+export default function HUD({ currentLevel, timeString, score, energy, objective, tabSwitchCount = 0 }: HUDProps) {
   return (
     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl text-slate-200 font-sans select-none relative overflow-hidden" id="global-hud">
       <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
+      
+      {tabSwitchCount > 0 && (
+        <div className="mb-3 bg-rose-500/20 border border-rose-500/40 px-4 py-2 rounded-xl flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0" />
+            <span className="text-xs sm:text-sm font-display font-black text-rose-300 uppercase tracking-wider">
+              SECURITY WARNING: TAB SWITCHING DETECTED! ({tabSwitchCount} INCIDENT{tabSwitchCount > 1 ? 'S' : ''})
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-rose-200 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-400/30 uppercase font-bold">
+            UNAUTHORIZED DEFOCUS
+          </span>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center" id="hud-grid-row">
         
