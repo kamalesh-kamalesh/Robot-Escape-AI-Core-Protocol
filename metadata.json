@@ -1,0 +1,6 @@
+{
+  "name": "Robot Escape: AI Core Protocol",
+  "description": "An interactive browser-based robotics escape room teaching AI, electronics, and programming concepts through environmental puzzle-solving and dark neon lab aesthetics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
