@@ -104,6 +104,41 @@ export async function clearAllTeamsFromFirebase() {
   }
 }
 
+export function subscribeToTeam(id: string, callback: (team: TeamData | null) => void) {
+  let rtdbHasData = false;
+
+  const teamRef = ref(rtdb, `teams/${id}`);
+  const unsubscribeRtdb = onValue(teamRef, (snapshot) => {
+    if (snapshot.exists()) {
+      rtdbHasData = true;
+      callback(snapshot.val() as TeamData);
+    } else {
+      if (!rtdbHasData) {
+        callback(null);
+      }
+    }
+  }, (err) => {
+    console.warn("RTDB listener notice:", err);
+  });
+
+  const unsubscribeFirestore = onSnapshot(doc(db, "teams", id), (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.data() as TeamData);
+    } else {
+      if (!rtdbHasData) {
+        callback(null);
+      }
+    }
+  }, (err) => {
+    console.warn("Firestore listener notice:", err);
+  });
+
+  return () => {
+    unsubscribeRtdb();
+    unsubscribeFirestore();
+  };
+}
+
 export function subscribeToTeams(callback: (teams: TeamData[]) => void) {
   let rtdbHasData = false;
 

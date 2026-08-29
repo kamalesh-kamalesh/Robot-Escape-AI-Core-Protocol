@@ -19,7 +19,7 @@ import { audio } from './utils/audio';
 
 import { Login } from './components/Login';
 import { Host } from './components/Host';
-import { updateTeamProgressInFirebase } from './lib/firebase';
+import { updateTeamProgressInFirebase, subscribeToTeam } from './lib/firebase';
 
 type AppView = 'login' | 'game' | 'host';
 type GameStatus = 'intro' | 'playing' | 'gameover' | 'victory';
@@ -258,34 +258,33 @@ export default function App() {
     }
   }, [score, currentLevel, gameStatus, appView]);
 
-  // Poll for host overrides
+  // Listen for host overrides or removal via Firebase Realtime Database
   useEffect(() => {
     if (appView === 'game' && teamInfo && gameStatus !== 'intro') {
-      const interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/teams/${teamInfo.id}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.level !== currentLevel && data.level > 0 && data.level <= 8) {
-              if (data.level > 7) {
-                 setGameStatus('victory');
-              } else {
-                 setCurrentLevel(data.level);
-                 setLives(3);
-                 setEnergy(100);
-              }
-            }
-            if (data.score !== score) {
-              setScore(data.score);
-            }
-          } else if (res.status === 404) {
-            setAppView('login');
-            setTeamInfo(null);
-            alert('Your team has been removed by the host.');
+      const unsubscribe = subscribeToTeam(teamInfo.id, (data) => {
+        if (!data) {
+          // Team was deleted from Firebase
+          setAppView('login');
+          setTeamInfo(null);
+          alert('Your team has been removed by the host.');
+          return;
+        }
+
+        if (data.level !== currentLevel && data.level > 0 && data.level <= 8) {
+          if (data.level > 7) {
+             setGameStatus('victory');
+          } else {
+             setCurrentLevel(data.level);
+             setLives(3);
+             setEnergy(100);
           }
-        } catch(e) {}
-      }, 3000);
-      return () => clearInterval(interval);
+        }
+        if (data.score !== score) {
+          setScore(data.score);
+        }
+      });
+      
+      return () => unsubscribe();
     }
   }, [appView, teamInfo, currentLevel, score, gameStatus]);
 
